@@ -1,2 +1,0 @@
-# CheckUrl-ext
-Extension
