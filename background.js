@@ -1,5 +1,5 @@
 //background.js handles the analysis, it runs the API calls and manages the whitelist
-const OPENAI_API_KEY = 'Replace with API key'
+const OPENAI_API_KEY = 'Replace with your key'; // REPLACE WITH YOUR KEY
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 
 console.log('╔════════════════════════════════════════╗');
