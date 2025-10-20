@@ -1,5 +1,4 @@
-/* Enhanced visual indicators for malicious links */
-
+/* this is the design for flagging each link that is marked as malicious*/
 .checkurl-page-warning {
     position: fixed !important;
     top: 0 !important;

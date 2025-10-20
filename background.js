@@ -1,125 +1,16 @@
-// Fixed message listener for background.js
-// Add this to replace the existing browser.runtime.onMessage.addListener in background.js
+//background.js handles the analysis, it runs the API calls and manages the whitelist
+const OPENAI_API_KEY = 'Replace with API key'
+const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
 
-browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    console.log('Background received message:', message);
-    
-    switch (message.action) {
-        case 'showNotification':
-            browser.notifications.create({
-                type: 'basic',
-                iconUrl: 'icons/icon-48.png',
-                title: message.title,
-                message: message.message
-            });
-            sendResponse({ success: true });
-            return false;
-            
-        case 'analyzeUrl':
-            if (!message.url) {
-                console.error('No URL provided to analyzeUrl');
-                sendResponse({ 
-                    status: 'safe', 
-                    threats: [], 
-                    confidence: 0,
-                    error: 'No URL provided'
-                });
-                return false;
-            }
-            
-            analyzeUrl(message.url).then(result => {
-                console.log('Analysis result:', result);
-                updateStatistics(result.status).then(() => {
-                    sendResponse(result);
-                }).catch(error => {
-                    console.error('Error updating statistics:', error);
-                    sendResponse(result);
-                });
-            }).catch(error => {
-                console.error('Error in analyzeUrl:', error);
-                sendResponse({ 
-                    status: 'safe', 
-                    threats: [], 
-                    confidence: 0,
-                    error: error.message 
-                });
-            });
-            return true; // Keep channel open for async response
-            
-        case 'getScanHistory':
-            browser.storage.local.get(['scanHistory']).then(result => {
-                sendResponse(result.scanHistory || []);
-            }).catch(error => {
-                console.error('Error getting scan history:', error);
-                sendResponse([]);
-            });
-            return true;
-            
-        case 'getStatistics':
-            browser.storage.local.get(['statistics']).then(result => {
-                sendResponse(result.statistics || {});
-            }).catch(error => {
-                console.error('Error getting statistics:', error);
-                sendResponse({});
-            });
-            return true;
-            
-        default:
-            console.log('Unknown action:', message.action);
-            sendResponse({ error: 'Unknown action' });
-            return false;
-    }
-});// Fixed message listener for background.js
-// Add this to replace the existing browser.runtime.onMessage.addListener in background.js
+console.log('╔════════════════════════════════════════╗');
+console.log('║  CHECK URL BACKGROUND SCRIPT LOADING  ║');
+console.log('╚════════════════════════════════════════╝');
+console.log('API Key Present:', OPENAI_API_KEY !== 'YOUR_API_KEY');
+console.log('API Key Length:', OPENAI_API_KEY.length);
+console.log('API Key Preview:', OPENAI_API_KEY.substring(0, 15) + '...');
+console.log('========================================\n');
 
-browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    switch (message.action) {
-        case 'showNotification':
-            browser.notifications.create({
-                type: 'basic',
-                iconUrl: 'icons/icon-48.png',
-                title: message.title,
-                message: message.message
-            });
-            sendResponse({ success: true });
-            break;
-            
-        case 'analyzeUrl':
-            analyzeUrl(message.url).then(result => {
-                updateStatistics(result.status);
-                sendResponse(result);
-            }).catch(error => {
-                console.error('Error in analyzeUrl:', error);
-                sendResponse({ 
-                    status: 'safe', 
-                    threats: [], 
-                    confidence: 0,
-                    error: error.message 
-                });
-            });
-            return true; // Keep channel open for async response
-            
-        case 'getScanHistory':
-            browser.storage.local.get(['scanHistory']).then(result => {
-                sendResponse(result.scanHistory || []);
-            }).catch(error => {
-                console.error('Error getting scan history:', error);
-                sendResponse([]);
-            });
-            return true;
-            
-        case 'getStatistics':
-            browser.storage.local.get(['statistics']).then(result => {
-                sendResponse(result.statistics || {});
-            }).catch(error => {
-                console.error('Error getting statistics:', error);
-                sendResponse({});
-            });
-            return true;
-    }
-    
-    return false;
-});// Enhanced background script for real-time URL protection
+
 browser.runtime.onInstalled.addListener((details) => {
     if (details.reason === 'install') {
         const defaultSettings = {
@@ -137,32 +28,6 @@ browser.runtime.onInstalled.addListener((details) => {
         browser.storage.local.set({
             extensionSettings: defaultSettings,
             scanHistory: [],
-            threatDatabase: {
-                version: '1.1.0',
-                lastUpdated: new Date().toISOString(),
-                patterns: [
-                    'free-iphone', 'scam', 'malware', 'fake-bank',
-                    'suspicious-download', 'claim-now', 'win-money', 'urgent-action',
-                    'verify-account', 'fake-antivirus', 'prize-winner', 'crypto-giveaway',
-                    'fake-update', 'tech-support', 'click-here-free', 'download-virus',
-                    'security-alert', 'computer-infected', 'microsoft-support',
-                    'apple-support', 'google-support', 'amazon-support', 'paypal-support',
-                    'bank-alert', 'account-suspended', 'immediate-action', 'confirm-identity',
-                    'update-payment', 'verify-information', 'suspicious-activity',
-                    'login-attempt', 'security-breach', 'data-breach', 'click-to-continue',
-                    'activate-account', 'temporary-suspension', 'refund-pending',
-                    'tax-refund', 'government-grant', 'stimulus-check', 'inheritance-fund',
-                    'lottery-winner', 'sweepstakes', 'congratulations-winner',
-                    'exclusive-offer', 'limited-time', 'act-now', 'expires-today',
-                    'final-notice', 'last-warning', 'overdue-payment', 'payment-failed'
-                ],
-                domains: [
-                    'bit.ly', 'tinyurl.com', '.tk', '.ml', '.ga', '.cf',
-                    'temp-mail', '10minutemail', 'guerrillamail', 'mailinator',
-                    'throwaway', 'tempmail', 'fake-', 'scam-',
-                    'malware-', 'virus-', 'trojan-'
-                ]
-            },
             statistics: {
                 totalScans: 0,
                 threatsBlocked: 0,
@@ -177,14 +42,14 @@ browser.runtime.onInstalled.addListener((details) => {
             type: 'basic',
             iconUrl: 'icons/icon-48.png',
             title: 'Check URL Extension Installed',
-            message: 'Real-time link protection is now active!'
+            message: 'AI-powered link protection is now active!'
         });
-        
-        console.log('Check URL extension installed successfully');
     }
 });
 
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    console.log('📨 Message received:', message.action);
+    
     switch (message.action) {
         case 'showNotification':
             browser.notifications.create({
@@ -193,135 +58,320 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 title: message.title,
                 message: message.message
             });
-            break;
+            sendResponse({ success: true });
+            return false;
             
         case 'analyzeUrl':
-            analyzeUrl(message.url).then(result => {
-                updateStatistics(result.status);
-                sendResponse(result);
+            if (!message.url) {
+                console.error('❌ No URL provided');
+                sendResponse({ 
+                    status: 'safe', 
+                    threats: [], 
+                    confidence: 0,
+                    error: 'No URL provided'
+                });
+                return false;
+            }
+            
+            analyzeUrlWithOpenAI(message.url).then(result => {
+                console.log('✅ Analysis complete:', {
+                    status: result.status,
+                    aiPowered: result.aiPowered,
+                    threats: result.threats
+                });
+                
+                updateStatistics(result.status).then(() => {
+                    sendResponse(result);
+                }).catch(error => {
+                    console.error('❌ Error updating statistics:', error);
+                    sendResponse(result);
+                });
+            }).catch(error => {
+                console.error('❌ Error in analyzeUrl:', error);
+                sendResponse({ 
+                    status: 'safe', 
+                    threats: [], 
+                    confidence: 0,
+                    error: error.message 
+                });
             });
             return true;
             
         case 'getScanHistory':
             browser.storage.local.get(['scanHistory']).then(result => {
                 sendResponse(result.scanHistory || []);
+            }).catch(error => {
+                sendResponse([]);
             });
             return true;
             
         case 'getStatistics':
             browser.storage.local.get(['statistics']).then(result => {
                 sendResponse(result.statistics || {});
+            }).catch(error => {
+                sendResponse({});
             });
             return true;
+            
+        default:
+            sendResponse({ error: 'Unknown action' });
+            return false;
     }
 });
 
-async function analyzeUrl(url) {
+//Queries the link with OpenAI
+async function analyzeUrlWithOpenAI(url) {
+    console.log('\n🤖 === OPENAI ANALYSIS START ===');
+    console.log('URL:', url);
+    
     try {
-        const result = await browser.storage.local.get(['threatDatabase', 'extensionSettings']);
-        const threatDb = result.threatDatabase;
-        const settings = result.extensionSettings || {};
+        // Whitelist Google's UI elements and trusted sites
+        const trustedUrls = [
+            'accounts.google.com',
+            'myaccount.google.com',
+            'passwords.google.com',
+            'www.google.com/accounts',
+            'www.google.com/intl',
+            'support.google.com',
+            'mail.google.com',
+            'drive.google.com',
+            'docs.google.com',
+            'calendar.google.com',
+            'youtube.com',
+            'play.google.com',
+            'facebook.com',
+            'instagram.com',
+            'twitter.com',
+            'x.com',
+            'linkedin.com',
+            'microsoft.com',
+            'apple.com',
+            'amazon.com',
+            'ebay.com',
+            'wikipedia.org',
+            'github.com',
+            'stackoverflow.com',
+            'reddit.com',
+            'netflix.com',
+            'spotify.com',
+            'nytimes.com',
+            'bbc.com',
+            'cnn.com',
+            'bloomberg.com',
+            'washingtonpost.com'
+        ];
         
-        if (!threatDb) {
-            return { status: 'safe', threats: [], confidence: 0 };
+        const urlObj = new URL(url);
+        const hostname = urlObj.hostname;
+        
+        // Check trusted domains
+        for (const trusted of trustedUrls) {
+            if (hostname === trusted || hostname.endsWith('.' + trusted)) {
+                console.log('✅ Whitelisted domain:', hostname);
+                return {
+                    status: 'safe',
+                    threats: [],
+                    confidence: 100,
+                    reasoning: 'Trusted website',
+                    timestamp: new Date().toISOString(),
+                    domain: hostname,
+                    aiPowered: false,
+                    whitelisted: true
+                };
+            }
         }
         
-        const threats = [];
-        let status = 'safe';
-        let riskScore = 0;
-        
-        const urlLower = url.toLowerCase();
-        const domain = extractDomain(url);
-        
-        // Check against malicious patterns
-        for (const pattern of threatDb.patterns) {
-            if (urlLower.includes(pattern.toLowerCase())) {
-                riskScore += 10;
+        // Whitelist Google's internal navigation ONLY (not external search results)
+        if (hostname.endsWith('.google.com')) {
+            const isGoogleNavigation = (
+                // Authentication and accounts
+                url.includes('/accounts/') ||
+                url.includes('ServiceLogin') ||
+                url.includes('SignUp') ||
+                url.includes('/intl/') ||
+                url.includes('signin') ||
+                url.includes('login') ||
                 
-                if (pattern.includes('scam')) threats.push('Scam');
-                else if (pattern.includes('malware')) threats.push('Malware');
-                else if (pattern.includes('fake-bank')) threats.push('Identity Theft');
-                else if (pattern.includes('crypto')) threats.push('Cryptocurrency Scam');
-                else if (pattern.includes('tech-support')) threats.push('Tech Support Scam');
-                else threats.push('Suspicious Content');
+                // Homepage
+                url.includes('/webhp') ||
+                
+                // Search type tabs (Images, Videos, News, Shopping, etc.)
+                url.includes('tbm=isch') ||  // Images
+                url.includes('tbm=vid') ||   // Videos
+                url.includes('tbm=nws') ||   // News
+                url.includes('tbm=shop') ||  // Shopping
+                url.includes('tbm=bks') ||   // Books
+                url.includes('tbm=flm') ||   // Flights
+                url.includes('&tbm=') ||     // Any search type tab
+                
+                // Pagination - must be Google's own pages, not external links
+                (hostname === 'www.google.com' && url.includes('/search?') && url.includes('&start=')) ||
+                
+                // "People also searched for" and related - only if staying on google.com
+                (hostname === 'www.google.com' && url.includes('/search?') && url.includes('&sa=')) ||
+                
+                // Settings and preferences
+                url.includes('/preferences') ||
+                url.includes('/advanced_search')
+            );
+            
+            if (isGoogleNavigation) {
+                console.log('✅ Whitelisted Google navigation/UI element');
+                return {
+                    status: 'safe',
+                    threats: [],
+                    confidence: 100,
+                    reasoning: 'Google navigation element',
+                    timestamp: new Date().toISOString(),
+                    domain: hostname,
+                    aiPowered: false,
+                    whitelisted: true
+                };
             }
         }
         
-        // Check against suspicious domains
-        for (const domainPattern of threatDb.domains) {
-            if (urlLower.includes(domainPattern.toLowerCase())) {
-                riskScore += 5;
-                if (!threats.includes('Suspicious Domain')) {
-                    threats.push('Suspicious Domain');
+        if (OPENAI_API_KEY === 'YOUR_API_KEY') {
+            console.error('❌ API key not configured');
+            return fallbackAnalysis(url);
+        }
+        
+        console.log('🌐 Making API request to OpenAI...');
+        
+        const requestBody = {
+            model: 'gpt-4o-mini',
+            messages: [
+                {
+                    role: 'system',
+                    content: 'You are a cybersecurity expert. Analyze URLs and respond ONLY with valid JSON, no markdown formatting.'
+                },
+                {
+                    role: 'user',
+                    content: `Analyze this URL for security threats: ${url}\n\nRespond with ONLY this JSON structure (no markdown, no code blocks):\n{"status":"safe|suspicious|malicious","threats":["array"],"confidence":85,"reasoning":"brief explanation"}`
                 }
-            }
-        }
-        
-        // Heuristic analysis
-        riskScore += performHeuristicAnalysis(url, domain);
-        
-        // Determine status
-        const protectionLevel = settings.protectionLevel || 'standard';
-        const thresholds = getProtectionThresholds(protectionLevel);
-        
-        if (riskScore >= thresholds.malicious) {
-            status = 'malicious';
-        } else if (riskScore >= thresholds.suspicious) {
-            status = 'suspicious';
-        }
-        
-        return {
-            status,
-            threats: threats.length > 0 ? [...new Set(threats)] : undefined,
-            confidence: Math.min(95, 70 + riskScore),
-            riskScore,
-            timestamp: new Date().toISOString(),
-            domain
+            ],
+            temperature: 0.3,
+            max_tokens: 200
         };
         
+        console.log('📤 Request body prepared');
+        
+        const response = await fetch(OPENAI_API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${OPENAI_API_KEY}`
+            },
+            body: JSON.stringify(requestBody)
+        });
+
+        console.log('📥 Response received:', {
+            status: response.status,
+            ok: response.ok
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ OpenAI API Error:', errorText);
+            return fallbackAnalysis(url);
+        }
+
+        const data = await response.json();
+        console.log('✅ OpenAI response parsed successfully');
+        
+        const aiResponse = data.choices[0].message.content;
+        console.log('🤖 AI Response:', aiResponse);
+        
+        let analysis;
+        try {
+            // Remove markdown code blocks if present
+            let cleanResponse = aiResponse.trim();
+            
+            if (cleanResponse.startsWith('```')) {
+                cleanResponse = cleanResponse.replace(/^```json?\s*\n?/i, '');
+                cleanResponse = cleanResponse.replace(/\n?```\s*$/, '');
+                cleanResponse = cleanResponse.trim();
+            }
+            
+            console.log('🧹 Cleaned response:', cleanResponse);
+            
+            analysis = JSON.parse(cleanResponse);
+            console.log('✅ Parsed analysis:', analysis);
+        } catch (parseError) {
+            console.error('❌ Error parsing AI JSON:', parseError);
+            console.log('📋 Falling back to local analysis');
+            return fallbackAnalysis(url);
+        }
+
+        const result = {
+            status: analysis.status || 'safe',
+            threats: Array.isArray(analysis.threats) ? analysis.threats : [],
+            confidence: Math.min(100, Math.max(0, analysis.confidence || 70)),
+            reasoning: analysis.reasoning || '',
+            timestamp: new Date().toISOString(),
+            domain: extractDomain(url),
+            aiPowered: true
+        };
+        
+        console.log('🎉 Analysis successful!');
+        console.log('=== OPENAI ANALYSIS END ===\n');
+        
+        return result;
+
     } catch (error) {
-        console.error('Error analyzing URL:', error);
-        return { status: 'safe', threats: [], confidence: 0, timestamp: new Date().toISOString() };
+        console.error('❌ Exception in OpenAI analysis:', error);
+        console.log('📋 Falling back to local analysis');
+        return fallbackAnalysis(url);
     }
 }
 
-function performHeuristicAnalysis(url, domain) {
+function fallbackAnalysis(url) {
+    console.log('🔧 Running fallback analysis for:', url);
+    
+    const threats = [];
+    let status = 'safe';
     let riskScore = 0;
     
-    // IP address instead of domain
-    if (url.match(/[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/)) riskScore += 6;
+    const urlLower = url.toLowerCase();
+    const domain = extractDomain(url);
     
-    // Suspicious TLDs
-    if (domain.match(/\.(tk|ml|ga|cf)$/)) riskScore += 5;
+    const maliciousPatterns = [
+        'free-iphone', 'scam', 'malware', 'fake-bank',
+        'suspicious-download', 'claim-now', 'win-money'
+    ];
     
-    // URL shorteners
-    if (url.match(/(bit\.ly|tinyurl|t\.co)/i)) riskScore += 4;
-    
-    // Punycode (IDN attacks)
-    if (url.includes('xn--')) riskScore += 4;
-    
-    // Brand impersonation
-    if (url.match(/(paypal|amazon|microsoft|apple|google)/i)) {
-        if (!domain.includes('paypal.com') && !domain.includes('amazon.com') && 
-            !domain.includes('microsoft.com') && !domain.includes('apple.com') && 
-            !domain.includes('google.com')) {
-            riskScore += 7;
+    for (const pattern of maliciousPatterns) {
+        if (urlLower.includes(pattern.toLowerCase())) {
+            riskScore += 10;
+            if (pattern.includes('scam')) threats.push('Scam');
+            else if (pattern.includes('malware')) threats.push('Malware');
+            else threats.push('Suspicious Content');
         }
     }
     
-    // Non-HTTPS
-    if (url.startsWith('http://')) riskScore += 2;
-    
-    return riskScore;
-}
-
-function getProtectionThresholds(level) {
-    switch (level) {
-        case 'strict': return { malicious: 8, suspicious: 4 };
-        case 'standard': return { malicious: 12, suspicious: 6 };
-        case 'permissive': return { malicious: 16, suspicious: 10 };
-        default: return { malicious: 12, suspicious: 6 };
+    if (urlLower.match(/\.(tk|ml|ga|cf)$/)) {
+        riskScore += 5;
+        threats.push('Suspicious Domain');
     }
+    
+    if (url.match(/[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/)) {
+        riskScore += 6;
+    }
+    
+    if (riskScore >= 12) status = 'malicious';
+    else if (riskScore >= 6) status = 'suspicious';
+    
+    const result = {
+        status,
+        threats: threats.length > 0 ? [...new Set(threats)] : [],
+        confidence: Math.min(95, 50 + riskScore),
+        reasoning: 'Fallback analysis (OpenAI unavailable)',
+        timestamp: new Date().toISOString(),
+        domain,
+        aiPowered: false
+    };
+    
+    console.log('📋 Fallback result:', result);
+    return result;
 }
 
 function extractDomain(url) {
@@ -353,8 +403,8 @@ async function updateStatistics(status) {
         
         await browser.storage.local.set({ statistics: stats });
     } catch (error) {
-        console.error('Error updating statistics:', error);
+        console.error('❌ Error updating statistics:', error);
     }
 }
 
-console.log('Check URL background script loaded');
+console.log('✅ Background script loaded successfully\n');

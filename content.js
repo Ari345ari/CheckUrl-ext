@@ -1,4 +1,4 @@
-// Enhanced content script - automatic link scanning and protection
+// Content script - compatible with OpenAI-powered analysis
 (function() {
     'use strict';
     
@@ -11,18 +11,8 @@
         autoHighlightLinks: true
     };
     
-    // Enhanced threat patterns
-    const maliciousPatterns = [
-        /free[-_]?iphone/i, /scam/i, /malware/i, /fake[-_]?bank/i,
-        /suspicious[-_]?download/i, /claim[-_]?now/i, /win[-_]?money/i,
-        /urgent[-_]?action/i, /verify[-_]?account/i, /fake[-_]?antivirus/i,
-        /prize[-_]?winner/i, /crypto[-_]?giveaway/i, /tech[-_]?support/i,
-        /click[-_]?here[-_]?free/i, /security[-_]?alert/i, /computer[-_]?infected/i
-    ];
-    
-    const suspiciousDomains = [
-        /bit\.ly/i, /tinyurl\.com/i, /\.tk$/i, /\.ml$/i, /\.ga$/i, /\.cf$/i
-    ];
+    const processedLinks = new Set();
+    const analysisCache = new Map();
     
     // Initialize
     loadSettingsAndInit();
@@ -46,15 +36,20 @@
         }
     }
     
-    function scanCurrentPageURL() {
+    async function scanCurrentPageURL() {
         const currentUrl = window.location.href;
-        const scanResult = analyzeUrl(currentUrl);
         
-        if (scanResult.status === 'malicious' || scanResult.status === 'suspicious') {
-            showPageWarning(currentUrl, scanResult);
+        try {
+            const scanResult = await analyzeUrlWithBackend(currentUrl);
+            
+            if (scanResult.status === 'malicious' || scanResult.status === 'suspicious') {
+                showPageWarning(currentUrl, scanResult);
+            }
+            
+            storeScanResult(currentUrl, scanResult);
+        } catch (error) {
+            console.error('CheckURL: Error scanning current page:', error);
         }
-        
-        storeScanResult(currentUrl, scanResult);
     }
     
     function showPageWarning(url, scanResult) {
@@ -67,21 +62,12 @@
             <div class="checkurl-warning-content">
                 <div class="checkurl-warning-icon">⚠️</div>
                 <div class="checkurl-warning-text">
-                    <strong>Warning: This page may be dangerous</strong>
-                    <br>Detected threats: ${scanResult.threats ? scanResult.threats.join(', ') : 'Suspicious content'}
+                    <strong>⚠️ Warning: This page may be dangerous</strong>
+                    <br>${scanResult.reasoning || `Detected threats: ${scanResult.threats ? scanResult.threats.join(', ') : 'Suspicious content'}`}
+                    ${scanResult.aiPowered ? '<br><small>🤖 AI-powered analysis</small>' : ''}
                 </div>
                 <button class="checkurl-close-banner">×</button>
             </div>
-        `;
-        
-        banner.style.cssText = `
-            position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important;
-            background: #fef2f2 !important; border-bottom: 2px solid #fca5a5 !important;
-            z-index: 999999 !important; font-family: system-ui, -apple-system, sans-serif !important;
-        `;
-        
-        banner.querySelector('.checkurl-warning-content').style.cssText = `
-            display: flex !important; align-items: center !important; padding: 12px 20px !important; gap: 12px !important;
         `;
         
         banner.querySelector('.checkurl-close-banner').addEventListener('click', () => banner.remove());
@@ -109,24 +95,52 @@
     function scanAndMarkAllLinks() {
         const links = document.querySelectorAll('a[href]');
         console.log(`CheckURL: Scanning ${links.length} links on page`);
-        links.forEach(link => processLink(link));
+        
+        // Process links in batches to avoid overwhelming the API
+        let index = 0;
+        const batchSize = 5;
+        
+        function processBatch() {
+            const batch = Array.from(links).slice(index, index + batchSize);
+            batch.forEach(link => processLink(link));
+            
+            index += batchSize;
+            if (index < links.length) {
+                setTimeout(processBatch, 1000); // 1 second delay between batches
+            }
+        }
+        
+        processBatch();
     }
     
-    function processLink(link) {
-        if (!link.href || link.getAttribute('data-checkurl-processed')) return;
+    async function processLink(link) {
+        if (!link.href || processedLinks.has(link.href)) return;
         
         const url = link.href;
-        const scanResult = analyzeUrl(url);
+        processedLinks.add(url);
         
-        link.setAttribute('data-checkurl-processed', 'true');
+        // Check cache first
+        if (analysisCache.has(url)) {
+            const cachedResult = analysisCache.get(url);
+            applyLinkMarking(link, cachedResult);
+            return;
+        }
         
-        if (scanResult.status === 'malicious' || scanResult.status === 'suspicious') {
-            markDangerousLink(link, scanResult);
-        } 
-        storeScanResult(url, scanResult);
+        try {
+            const scanResult = await analyzeUrlWithBackend(url);
+            analysisCache.set(url, scanResult);
+            
+            if (scanResult.status === 'malicious' || scanResult.status === 'suspicious') {
+                applyLinkMarking(link, scanResult);
+            }
+            
+            storeScanResult(url, scanResult);
+        } catch (error) {
+            console.error('CheckURL: Error processing link:', error);
+        }
     }
     
-    function markDangerousLink(link, scanResult) {
+    function applyLinkMarking(link, scanResult) {
         const isMalicious = scanResult.status === 'malicious';
         
         link.style.cssText += `
@@ -149,6 +163,7 @@
         
         link.setAttribute('data-checkurl-status', scanResult.status);
         link.setAttribute('data-checkurl-threats', JSON.stringify(scanResult.threats || []));
+        link.setAttribute('data-checkurl-ai', scanResult.aiPowered ? 'true' : 'false');
         
         if (settings.showWarningPopups) {
             link.addEventListener('mouseenter', (e) => showHoverWarning(e, link, scanResult));
@@ -157,7 +172,21 @@
         
         link.addEventListener('click', (e) => handleDangerousClick(e, link, scanResult));
     }
- 
+    
+    async function analyzeUrlWithBackend(url) {
+        try {
+            const response = await browser.runtime.sendMessage({
+                action: 'analyzeUrl',
+                url: url
+            });
+            
+            return response;
+        } catch (error) {
+            console.error('CheckURL: Error communicating with background:', error);
+            return { status: 'safe', threats: [], confidence: 0 };
+        }
+    }
+    
     function showHoverWarning(event, link, scanResult) {
         hideHoverWarning();
         
@@ -165,7 +194,7 @@
         const x = rect.left + window.scrollX;
         const y = rect.bottom + window.scrollY;
         
-        createWarningPopup(link.href, scanResult.threats || [], x + rect.width / 2, y - 50, scanResult.status);
+        createWarningPopup(link.href, scanResult, x + rect.width / 2, y - 50);
     }
     
     function hideHoverWarning() {
@@ -173,6 +202,52 @@
             warningPopup.remove();
             warningPopup = null;
         }
+    }
+    
+    function createWarningPopup(url, scanResult, x, y) {
+        hideHoverWarning();
+        
+        const status = scanResult.status;
+        const threats = scanResult.threats || [];
+        
+        warningPopup = document.createElement('div');
+        warningPopup.className = 'checkurl-hover-warning';
+        warningPopup.innerHTML = `
+            <div class="warning-content">
+                <div class="warning-header">
+                    <div class="warning-icon">${status === 'malicious' ? '🚨' : '⚠️'}</div>
+                    <div class="warning-title">${status === 'malicious' ? 'Malicious Link' : 'Suspicious Link'}</div>
+                </div>
+                <div class="warning-body">
+                    <p class="warning-text">${scanResult.reasoning || 'This link has been flagged as ' + status + '.'}</p>
+                    <div class="warning-url">${url}</div>
+                    ${threats.length > 0 ? `
+                        <div class="warning-threats">
+                            ${threats.map(threat => `<span class="threat-badge">${threat}</span>`).join('')}
+                        </div>
+                    ` : ''}
+                    ${scanResult.aiPowered ? '<p style="font-size: 11px; color: #666; margin-top: 8px;">🤖 AI-powered analysis</p>' : ''}
+                </div>
+            </div>
+        `;
+        
+        warningPopup.style.cssText = `
+            position: absolute !important; width: 320px !important; background: #fef2f2 !important;
+            border: 2px solid #fca5a5 !important; border-radius: 8px !important;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3) !important; font-family: system-ui, -apple-system, sans-serif !important;
+            font-size: 14px !important; z-index: 999999 !important;
+            left: ${Math.min(x, window.innerWidth - 340)}px !important;
+            top: ${Math.max(y - 120, 10)}px !important;
+        `;
+        
+        document.body.appendChild(warningPopup);
+        
+        setTimeout(() => {
+            if (warningPopup) {
+                warningPopup.remove();
+                warningPopup = null;
+            }
+        }, 5000);
     }
     
     function handleDangerousClick(event, link, scanResult) {
@@ -210,8 +285,9 @@
                         ${scanResult.status === 'malicious' ? 'Dangerous Link Detected' : 'Suspicious Link Warning'}
                     </h3>
                     <p style="margin: 8px 0; color: #374151;">
-                        This link has been flagged as potentially ${scanResult.status === 'malicious' ? 'dangerous' : 'suspicious'}.
+                        ${scanResult.reasoning || 'This link has been flagged as potentially ' + scanResult.status + '.'}
                     </p>
+                    ${scanResult.aiPowered ? '<p style="margin: 4px 0; font-size: 12px; color: #666;">🤖 AI-powered analysis</p>' : ''}
                 </div>
             </div>
             
@@ -268,87 +344,6 @@
         });
     }
     
-    function createWarningPopup(url, threats, x, y, status = 'malicious') {
-        hideHoverWarning();
-        
-        warningPopup = document.createElement('div');
-        warningPopup.className = 'checkurl-hover-warning';
-        warningPopup.innerHTML = `
-            <div class="warning-content">
-                <div class="warning-header">
-                    <div class="warning-icon">${status === 'malicious' ? '🚨' : '⚠️'}</div>
-                    <div class="warning-title">${status === 'malicious' ? 'Malicious Link' : 'Suspicious Link'}</div>
-                </div>
-                <div class="warning-body">
-                    <p class="warning-text">This link has been flagged as ${status}.</p>
-                    <div class="warning-url">${url}</div>
-                    ${threats.length > 0 ? `
-                        <div class="warning-threats">
-                            ${threats.map(threat => `<span class="threat-badge">${threat}</span>`).join('')}
-                        </div>
-                    ` : ''}
-                </div>
-            </div>
-        `;
-        
-        warningPopup.style.cssText = `
-            position: absolute !important; width: 300px !important; background: #fef2f2 !important;
-            border: 2px solid #fca5a5 !important; border-radius: 8px !important;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3) !important; font-family: system-ui, -apple-system, sans-serif !important;
-            font-size: 14px !important; z-index: 999999 !important;
-            left: ${Math.min(x, window.innerWidth - 320)}px !important;
-            top: ${Math.max(y - 120, 10)}px !important;
-        `;
-        
-        document.body.appendChild(warningPopup);
-        
-        setTimeout(() => {
-            if (warningPopup) {
-                warningPopup.remove();
-                warningPopup = null;
-            }
-        }, 5000);
-    }
-    
-    function analyzeUrl(url) {
-        try {
-            const threats = [];
-            let status = 'safe';
-            
-            for (const pattern of maliciousPatterns) {
-                if (pattern.test(url)) {
-                    status = 'malicious';
-                    if (url.match(/scam/i)) threats.push('Scam');
-                    if (url.match(/malware/i)) threats.push('Malware');
-                    if (url.match(/fake[-_]?bank/i)) threats.push('Identity Theft');
-                    if (url.match(/crypto[-_]?giveaway/i)) threats.push('Cryptocurrency Scam');
-                    if (url.match(/tech[-_]?support/i)) threats.push('Tech Support Scam');
-                    break;
-                }
-            }
-            
-            if (status === 'safe') {
-                for (const pattern of suspiciousDomains) {
-                    if (pattern.test(url)) {
-                        status = 'suspicious';
-                        threats.push('Suspicious Domain');
-                        break;
-                    }
-                }
-            }
-            
-            return {
-                status,
-                threats: threats.length > 0 ? [...new Set(threats)] : undefined,
-                timestamp: new Date().toISOString()
-            };
-            
-        } catch (error) {
-            console.error('CheckURL: Error analyzing URL:', error);
-            return { status: 'safe', threats: [], timestamp: new Date().toISOString() };
-        }
-    }
-    
     function storeScanResult(url, scanResult) {
         try {
             browser.storage.local.get(['scanHistory']).then(result => {
@@ -357,8 +352,9 @@
                     id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
                     url: url,
                     status: scanResult.status,
-                    timestamp: scanResult.timestamp,
-                    threats: scanResult.threats
+                    timestamp: scanResult.timestamp || new Date().toISOString(),
+                    threats: scanResult.threats,
+                    aiPowered: scanResult.aiPowered || false
                 };
                 
                 history.unshift(scanItem);
@@ -371,7 +367,6 @@
         }
     }
     
-    // Listen for messages
     browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
         if (message.action === 'scanCurrentPage') {
             scanAndMarkAllLinks();
@@ -382,6 +377,6 @@
         }
     });
     
-    console.log('CheckURL: Enhanced content script loaded');
+    console.log('CheckURL: Content script loaded with OpenAI integration');
     
 })();
