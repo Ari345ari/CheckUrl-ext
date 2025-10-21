@@ -1,14 +1,17 @@
-/* this is the design for flagging each link that is marked as malicious*/
+/* Modern Minimal Design for Check URL Warnings */
+
+/* Page Warning Banner */
 .checkurl-page-warning {
     position: fixed !important;
     top: 0 !important;
     left: 0 !important;
     right: 0 !important;
-    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%) !important;
-    border-bottom: 3px solid #f87171 !important;
+    background: #fff !important;
+    border-bottom: 1px solid #fecaca !important;
     z-index: 999999 !important;
-    font-family: system-ui, -apple-system, sans-serif !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    box-shadow: 0 4px 20px rgba(239, 68, 68, 0.1) !important;
+    backdrop-filter: blur(10px) !important;
 }
 
 .checkurl-warning-content {
@@ -16,26 +19,26 @@
     align-items: center !important;
     padding: 16px 24px !important;
     gap: 14px !important;
-    max-width: 1200x !important;
+    max-width: 1200px !important;
     margin: 0 auto !important;
 }
 
 .checkurl-warning-icon {
-    font-size: 20px !important;
+    font-size: 22px !important;
     flex-shrink: 0 !important;
     width: 44px !important;
     height: 44px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    background-color: #fef2f2 !important;
+    background: #fef2f2 !important;
     border-radius: 10px !important;
 }
 
 .checkurl-warning-text {
     flex: 1 !important;
     color: #1a1a1a !important;
-    font-size:14px !important;
+    font-size: 14px !important;
     line-height: 1.6 !important;
 }
 
@@ -55,10 +58,10 @@
 }
 
 .checkurl-close-banner {
-    background: none !important;
-    border: none !important;
+    background: #fafafa !important;
+    border: 1px solid #f0f0f0 !important;
     font-size: 18px !important;
-    color: #991b1b !important;
+    color: #737373 !important;
     cursor: pointer !important;
     padding: 8px !important;
     border-radius: 8px !important;
@@ -72,77 +75,70 @@
 }
 
 .checkurl-close-banner:hover {
-    background: rgba(239, 68, 68, 0.1) !important;
+    background: #f0f0f0 !important;
+    border-color: #e5e5e5 !important;
     transform: scale(1.05) !important;
 }
 
-/* Enhanced link styling */
+/* Enhanced Link Styling - Minimal & Clean */
 a[data-checkurl-status="malicious"] {
     position: relative !important;
     outline: 2px solid #dc2626 !important;
-    outline-offset: 1px !important;
-    background: rgba(220, 38, 38, 0.1) !important;
-    border-radius: 3px !important;
-    animation: checkurl-maliciousPulse 3s infinite !important;
+    outline-offset: 2px !important;
+    background: rgba(239, 68, 68, 0.08) !important;
+    border-radius: 4px !important;
+    padding: 1px 4px !important;
+    transition: all 0.3s ease !important;
 }
 
-@keyframes checkurl-maliciousPulse {
-    0%, 100% { 
-        outline-color: #dc2626;
-        background: rgba(220, 38, 38, 0.1);
-    }
-    50% { 
-        outline-color: #ef4444;
-        background: rgba(239, 68, 68, 0.15);
-    }
+a[data-checkurl-status="malicious"]:hover {
+    background: rgba(239, 68, 68, 0.12) !important;
+    outline-color: #ef4444 !important;
 }
 
 a[data-checkurl-status="suspicious"] {
     position: relative !important;
-    outline: 2px solid #eab308 !important;
-    outline-offset: 1px !important;
-    background: rgba(234, 179, 8, 0.1) !important;
-    border-radius: 3px !important;
-    animation: checkurl-suspiciousPulse 4s infinite !important;
+    outline: 2px solid #f59e0b !important;
+    outline-offset: 2px !important;
+    background: rgba(245, 158, 11, 0.08) !important;
+    border-radius: 4px !important;
+    padding: 1px 4px !important;
+    transition: all 0.3s ease !important;
 }
 
-@keyframes checkurl-suspiciousPulse {
-    0%, 100% { 
-        outline-color: #eab308;
-        background: rgba(234, 179, 8, 0.1);
-    }
-    50% { 
-        outline-color: #fbbf24;
-        background: rgba(251, 191, 36, 0.15);
-    }
+a[data-checkurl-status="suspicious"]:hover {
+    background: rgba(245, 158, 11, 0.12) !important;
+    outline-color: #fbbf24 !important;
 }
 
 a[data-checkurl-status="safe"] {
     position: relative !important;
 }
 
-/* Warning icons */
-.checkurl-warning-icon {
-    font-size: 12px !important;
+/* Warning Icons - Subtle & Modern */
+.checkurl-warning-icon-inline {
+    font-size: 11px !important;
     margin-left: 4px !important;
-    opacity: 0.9 !important;
+    opacity: 0.8 !important;
+    display: inline-block !important;
 }
 
 .checkurl-safe-icon {
     font-size: 10px !important;
-    margin-left: 2px !important;
-    opacity: 0.5 !important;
+    margin-left: 3px !important;
+    opacity: 0.4 !important;
+    color: #10b981 !important;
 }
 
-/* Hover warning popup */
+/* Hover Warning Popup - Modern Card */
 .checkurl-hover-warning {
     position: absolute !important;
     width: 340px !important;
     background: #fff !important;
     border: 1px solid #f0f0f0 !important;
     border-radius: 12px !important;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3) !important;
-    font-family: system-ui, -apple-system, sans-serif !important;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
     font-size: 14px !important;
     z-index: 999999 !important;
     overflow: hidden !important;
@@ -161,7 +157,7 @@ a[data-checkurl-status="safe"] {
 }
 
 .checkurl-hover-warning .warning-content {
-    padding: 0px !important;
+    padding: 0 !important;
 }
 
 .checkurl-hover-warning .warning-header {
@@ -169,8 +165,21 @@ a[data-checkurl-status="safe"] {
     align-items: center !important;
     gap: 12px !important;
     padding: 16px !important;
-    background-color: #fafafa !important;
-    margin-bottom: 1px solid #f0f0f0 !important;
+    background: #fafafa !important;
+    border-bottom: 1px solid #f0f0f0 !important;
+}
+
+.checkurl-hover-warning .warning-icon {
+    font-size: 24px !important;
+    width: 44px !important;
+    height: 44px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: #fff !important;
+    border-radius: 10px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+    flex-shrink: 0 !important;
 }
 
 .checkurl-hover-warning .warning-title {
@@ -185,48 +194,268 @@ a[data-checkurl-status="safe"] {
 }
 
 .checkurl-hover-warning .warning-text {
-    color: #7f1d1d !important;
-    margin: 0 0 8px 0 !important;
-    font-size: 12px !important;
+    color: #525252 !important;
+    margin: 0 0 12px 0 !important;
+    font-size: 13px !important;
+    line-height: 1.6 !important;
 }
 
 .checkurl-hover-warning .warning-url {
-    background: #fca5a5 !important;
-    padding: 6px !important;
-    border-radius: 4px !important;
-    font-family: monospace !important;
+    background: #fafafa !important;
+    padding: 10px 12px !important;
+    border-radius: 8px !important;
+    font-family: ui-monospace, 'SF Mono', monospace !important;
     font-size: 11px !important;
-    color: #7f1d1d !important;
+    color: #525252 !important;
     word-break: break-all !important;
-    margin-bottom: 8px !important;
+    margin-bottom: 12px !important;
+    border: 1px solid #f0f0f0 !important;
 }
 
 .checkurl-hover-warning .warning-threats {
     display: flex !important;
     flex-wrap: wrap !important;
-    gap: 4px !important;
+    gap: 6px !important;
+    margin-top: 12px !important;
 }
 
 .checkurl-hover-warning .threat-badge {
-    background: #dc2626 !important;
-    color: white !important;
-    padding: 2px 6px !important;
-    border-radius: 10px !important;
-    font-size: 10px !important;
-    font-weight: 500 !important;
+    background: #1a1a1a !important;
+    color: #fff !important;
+    padding: 4px 10px !important;
+    border-radius: 6px !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.3px !important;
 }
 
-/* Modal overlay */
+.checkurl-hover-warning .warning-footer {
+    padding: 12px 16px !important;
+    background: #fafafa !important;
+    border-top: 1px solid #f0f0f0 !important;
+    font-size: 11px !important;
+    color: #737373 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+}
+
+/* Modal Overlay - Modern Backdrop */
 .checkurl-modal-overlay {
     position: fixed !important;
     top: 0 !important;
     left: 0 !important;
     right: 0 !important;
     bottom: 0 !important;
-    background: rgba(0, 0, 0, 0.5) !important;
+    background: rgba(0, 0, 0, 0.6) !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     z-index: 1000000 !important;
-    font-family: system-ui, -apple-system, sans-serif !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    backdrop-filter: blur(4px) !important;
+    animation: checkurl-overlayFadeIn 0.2s ease !important;
+}
+
+@keyframes checkurl-overlayFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.checkurl-modal-overlay > div {
+    animation: checkurl-modalSlideUp 0.3s ease !important;
+}
+
+@keyframes checkurl-modalSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Modal Dialog - Clean Card */
+.checkurl-modal-dialog {
+    background: #fff !important;
+    border-radius: 16px !important;
+    padding: 0 !important;
+    max-width: 480px !important;
+    width: 90% !important;
+    margin: 20px !important;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25) !important;
+    overflow: hidden !important;
+}
+
+.checkurl-modal-header {
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 14px !important;
+    padding: 24px !important;
+    background: #fafafa !important;
+    border-bottom: 1px solid #f0f0f0 !important;
+}
+
+.checkurl-modal-icon {
+    font-size: 28px !important;
+    width: 52px !important;
+    height: 52px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: #fff !important;
+    border-radius: 12px !important;
+    flex-shrink: 0 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+}
+
+.checkurl-modal-title {
+    flex: 1 !important;
+}
+
+.checkurl-modal-title h3 {
+    margin: 0 0 6px 0 !important;
+    color: #1a1a1a !important;
+    font-size: 18px !important;
+    font-weight: 600 !important;
+}
+
+.checkurl-modal-title p {
+    margin: 0 !important;
+    color: #525252 !important;
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+}
+
+.checkurl-modal-title small {
+    display: block !important;
+    margin-top: 8px !important;
+    font-size: 12px !important;
+    color: #737373 !important;
+}
+
+.checkurl-modal-body {
+    padding: 24px !important;
+}
+
+.checkurl-modal-url-box {
+    background: #fafafa !important;
+    padding: 14px !important;
+    border-radius: 10px !important;
+    margin-bottom: 20px !important;
+    border: 1px solid #f0f0f0 !important;
+}
+
+.checkurl-modal-url-box p {
+    margin: 0 !important;
+    font-size: 12px !important;
+    color: #737373 !important;
+    word-break: break-all !important;
+}
+
+.checkurl-modal-url-box strong {
+    color: #1a1a1a !important;
+    font-weight: 600 !important;
+}
+
+.checkurl-modal-threats {
+    margin-bottom: 20px !important;
+}
+
+.checkurl-modal-threats p {
+    margin: 0 0 10px 0 !important;
+    font-size: 13px !important;
+    color: #525252 !important;
+    font-weight: 500 !important;
+}
+
+.checkurl-modal-threat-tags {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+}
+
+.checkurl-modal-threat-tag {
+    background: #1a1a1a !important;
+    color: #fff !important;
+    padding: 6px 12px !important;
+    border-radius: 8px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.3px !important;
+}
+
+.checkurl-modal-actions {
+    display: flex !important;
+    gap: 10px !important;
+    padding: 20px 24px !important;
+    background: #fafafa !important;
+    border-top: 1px solid #f0f0f0 !important;
+}
+
+.checkurl-modal-btn {
+    flex: 1 !important;
+    padding: 12px 20px !important;
+    border: none !important;
+    border-radius: 10px !important;
+    cursor: pointer !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+    transition: all 0.2s !important;
+}
+
+.checkurl-modal-btn-primary {
+    background: #1a1a1a !important;
+    color: #fff !important;
+}
+
+.checkurl-modal-btn-primary:hover {
+    background: #333 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.checkurl-modal-btn-secondary {
+    background: #fff !important;
+    color: #1a1a1a !important;
+    border: 1px solid #e5e5e5 !important;
+}
+
+.checkurl-modal-btn-secondary:hover {
+    background: #fafafa !important;
+    border-color: #d4d4d4 !important;
+}
+
+/* Accessibility & Responsive */
+@media (prefers-reduced-motion: reduce) {
+    .checkurl-hover-warning,
+    .checkurl-modal-overlay,
+    .checkurl-modal-overlay > div {
+        animation: none !important;
+    }
+    
+    a[data-checkurl-status="malicious"],
+    a[data-checkurl-status="suspicious"] {
+        transition: none !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .checkurl-hover-warning {
+        width: 90% !important;
+        max-width: 320px !important;
+    }
+    
+    .checkurl-modal-dialog {
+        width: 95% !important;
+        margin: 10px !important;
+    }
 }
