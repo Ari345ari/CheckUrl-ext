@@ -14,34 +14,66 @@
 .checkurl-warning-content {
     display: flex !important;
     align-items: center !important;
-    padding: 12px 20px !important;
-    gap: 12px !important;
+    padding: 16px 24px !important;
+    gap: 14px !important;
+    max-width: 1200x !important;
+    margin: 0 auto !important;
 }
 
 .checkurl-warning-icon {
     font-size: 20px !important;
     flex-shrink: 0 !important;
+    width: 44px !important;
+    height: 44px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background-color: #fef2f2 !important;
+    border-radius: 10px !important;
 }
 
 .checkurl-warning-text {
     flex: 1 !important;
-    color: #991b1b !important;
-    font-size: 14px !important;
-    line-height: 1.4 !important;
+    color: #1a1a1a !important;
+    font-size:14px !important;
+    line-height: 1.6 !important;
+}
+
+.checkurl-warning-text strong {
+    display: block !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    color: #dc2626 !important;
+    margin-bottom: 4px !important;
+}
+
+.checkurl-warning-text small {
+    display: block !important;
+    font-size: 12px !important;
+    color: #737373 !important;
+    margin-top: 6px !important;
 }
 
 .checkurl-close-banner {
     background: none !important;
     border: none !important;
-    font-size: 20px !important;
+    font-size: 18px !important;
     color: #991b1b !important;
     cursor: pointer !important;
-    padding: 4px !important;
-    border-radius: 4px !important;
+    padding: 8px !important;
+    border-radius: 8px !important;
+    width: 32px !important;
+    height: 32px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.2s !important;
+    flex-shrink: 0 !important;
 }
 
 .checkurl-close-banner:hover {
     background: rgba(239, 68, 68, 0.1) !important;
+    transform: scale(1.05) !important;
 }
 
 /* Enhanced link styling */
@@ -105,30 +137,51 @@ a[data-checkurl-status="safe"] {
 /* Hover warning popup */
 .checkurl-hover-warning {
     position: absolute !important;
-    width: 300px !important;
-    background: #fef2f2 !important;
-    border: 2px solid #fca5a5 !important;
-    border-radius: 8px !important;
+    width: 340px !important;
+    background: #fff !important;
+    border: 1px solid #f0f0f0 !important;
+    border-radius: 12px !important;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3) !important;
     font-family: system-ui, -apple-system, sans-serif !important;
     font-size: 14px !important;
     z-index: 999999 !important;
+    overflow: hidden !important;
+    animation: checkurl-fadeIn 0.2s ease !important;
+}
+
+@keyframes checkurl-fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .checkurl-hover-warning .warning-content {
-    padding: 12px !important;
+    padding: 0px !important;
 }
 
 .checkurl-hover-warning .warning-header {
     display: flex !important;
     align-items: center !important;
-    gap: 8px !important;
-    margin-bottom: 8px !important;
+    gap: 12px !important;
+    padding: 16px !important;
+    background-color: #fafafa !important;
+    margin-bottom: 1px solid #f0f0f0 !important;
 }
 
 .checkurl-hover-warning .warning-title {
     font-weight: 600 !important;
-    color: #991b1b !important;
+    color: #1a1a1a !important;
+    font-size: 15px !important;
+    flex: 1 !important;
+}
+
+.checkurl-hover-warning .warning-body {
+    padding: 16px !important;
 }
 
 .checkurl-hover-warning .warning-text {
